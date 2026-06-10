@@ -1,200 +1,122 @@
 "use client";
-import { useRef, useState } from "react";
-import { motion, useInView, AnimatePresence } from "framer-motion";
+import { useState, useRef, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 
-const NO_TEXTS = [
-  "No", "¿Segura?", "Piénsalo bien...", "En serio?",
-  "Última oportunidad", "Nooo", "Por favor 🥺", "Dale al Sí va",
-];
-
-export default function Act5() {
-  const ref = useRef<HTMLElement>(null);
-  const isInView = useInView(ref, { amount: 0.5, once: true });
-  const [noCount, setNoCount] = useState(0);
+export default function Act5({ onRestart }: { onRestart: () => void }) {
   const [accepted, setAccepted] = useState(false);
-  const [noPos, setNoPos] = useState({ x: 0, y: 0 });
+  const containerRef = useRef<HTMLDivElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [noPosition, setNoPosition] = useState({ x: 0, y: 0 });
 
-  const yesScale = 1 + noCount * 0.28;
-  const noLabel = NO_TEXTS[Math.min(noCount, NO_TEXTS.length - 1)];
-  const noOpacity = Math.max(0.08, 1 - noCount * 0.13);
-  const noSize = Math.max(9, 14 - noCount * 0.6);
+  // Lógica de Canvas para corazones FLUIDOS a 60FPS
+  useEffect(() => {
+    if (!accepted || !canvasRef.current) return;
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext("2d")!;
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
 
-  function handleNo() {
-    if (noCount >= NO_TEXTS.length - 1) return;
-    setNoCount(c => c + 1);
-    // jump to random spot around the button area
-    setNoPos({
-      x: (Math.random() - 0.5) * 340,
-      y: (Math.random() - 0.5) * 160,
+    let particles: any[] = [];
+    for(let i=0; i<80; i++) {
+      particles.push({
+        x: Math.random() * canvas.width, y: canvas.height + Math.random() * 500,
+        size: Math.random() * 15 + 10, speed: Math.random() * 3 + 2,
+        swing: Math.random() * 3, swingSpeed: Math.random() * 0.05, angle: Math.random() * Math.PI * 2
+      });
+    }
+
+    let animId: number;
+    function render() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = "#E11D48"; // Color rosa/rojo
+      ctx.font = "24px Arial";
+      
+      particles.forEach(p => {
+        p.y -= p.speed;
+        p.angle += p.swingSpeed;
+        const x = p.x + Math.sin(p.angle) * p.swing;
+        
+        ctx.save();
+        ctx.translate(x, p.y);
+        ctx.font = `${p.size}px Arial`;
+        ctx.fillText("❤", 0, 0);
+        ctx.restore();
+
+        if(p.y < -50) p.y = canvas.height + 50;
+      });
+      animId = requestAnimationFrame(render);
+    }
+    render();
+    return () => cancelAnimationFrame(animId);
+  }, [accepted]);
+
+  // Lógica segura para el botón No (nunca sale de la pantalla)
+  const dodgeHover = () => {
+    if (accepted || !containerRef.current) return;
+    const box = containerRef.current.getBoundingClientRect();
+    const maxX = box.width / 2.5; 
+    const maxY = 100;
+    setNoPosition({
+      x: (Math.random() - 0.5) * maxX * 2,
+      y: (Math.random() - 0.5) * maxY * 2
     });
-  }
+  };
 
   return (
-    <section
-      id="act5"
-      ref={ref}
-      className="min-h-svh scroll-snap-start flex flex-col items-center justify-center gap-14 px-6 text-center relative overflow-hidden"
-    >
-      {/* subtle bg glow */}
-      <motion.div
-        className="absolute inset-0 pointer-events-none"
-        animate={{ opacity: isInView ? 1 : 0 }}
-        transition={{ duration: 2 }}
-        style={{
-          background:
-            "radial-gradient(ellipse 55% 45% at 50% 55%, rgba(201,160,160,0.09) 0%, transparent 70%)",
-        }}
-      />
+    <section ref={containerRef} className="w-full h-full flex flex-col items-center justify-center relative overflow-hidden px-4">
+      
+      <canvas ref={canvasRef} className="absolute inset-0 z-0 pointer-events-none" />
 
       <AnimatePresence mode="wait">
         {!accepted ? (
-          <motion.div
-            key="question"
-            className="flex flex-col items-center gap-14 relative z-10"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: isInView ? 1 : 0 }}
-            exit={{ opacity: 0, scale: 0.95, filter: "blur(8px)" }}
-            transition={{ duration: 0.8 }}
-          >
-            {/* Question */}
-            <div className="flex flex-col items-center gap-4">
-              <motion.p
-                className="text-[0.65rem] tracking-[0.38em] uppercase"
-                style={{ color: "var(--ink-faint)" }}
-                initial={{ opacity: 0, y: 8 }}
-                animate={isInView ? { opacity: 1, y: 0 } : {}}
-                transition={{ duration: 0.9, delay: 0.3 }}
-              >
-                Una pregunta
-              </motion.p>
+          <motion.div key="question" className="z-10 flex flex-col items-center w-full" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0, scale: 1.5, filter: "blur(10px)" }}>
+            <h1 className="font-serif-display italic text-4xl md:text-6xl mb-20 text-center leading-tight">
+              Después de todo esto...<br/>
+              <span className="text-rose-300">¿Quieres ser mi novia?</span>
+            </h1>
 
-              <motion.h2
-                className="font-serif-display font-light leading-[1.35]"
-                style={{
-                  fontSize: "clamp(1.5rem, 5vw, 2.6rem)",
-                  color: "var(--ink)",
-                  maxWidth: 560,
-                }}
-                initial={{ opacity: 0, y: 16, filter: "blur(6px)" }}
-                animate={isInView ? { opacity: 1, y: 0, filter: "blur(0px)" } : {}}
-                transition={{ duration: 1.1, delay: 0.6, ease: [0.16, 1, 0.3, 1] }}
-              >
-                Asly Melanie Rodríguez Reyes,<br />
-                <span style={{ color: "var(--rose-bright)", fontStyle: "italic" }}>
-                  ¿quieres ser mi novia?
-                </span>
-              </motion.h2>
-            </div>
-
-            {/* Buttons */}
-            <motion.div
-              className="relative flex items-center justify-center gap-8"
-              initial={{ opacity: 0, y: 12 }}
-              animate={isInView ? { opacity: 1, y: 0 } : {}}
-              transition={{ duration: 0.8, delay: 1.1 }}
-            >
-              {/* SÍ */}
+            <div className="relative w-full max-w-md h-32 flex justify-center items-center">
+              {/* Botón Sí */}
               <motion.button
-                animate={{ scale: yesScale }}
-                transition={{ type: "spring", stiffness: 260, damping: 18 }}
-                whileHover={{ scale: yesScale * 1.06 }}
-                whileTap={{ scale: yesScale * 0.96 }}
+                whileHover={{ scale: 1.1, boxShadow: "0px 0px 40px rgba(255, 180, 180, 0.8)" }}
+                whileTap={{ scale: 0.9 }}
                 onClick={() => setAccepted(true)}
-                className="font-serif-display italic font-light relative overflow-hidden"
-                style={{
-                  fontSize: "clamp(1rem, 4vw, 1.4rem)",
-                  border: "1px solid var(--rose)",
-                  color: "var(--rose-bright)",
-                  background: "transparent",
-                  padding: "0.7em 2.2em",
-                  cursor: "pointer",
-                  whiteSpace: "nowrap",
-                }}
+                className="absolute z-20 px-12 py-4 bg-white text-rose-900 font-serif-display text-2xl rounded-full transition-all"
               >
-                <motion.span
-                  className="absolute inset-0 origin-left"
-                  style={{ background: "var(--rose)" }}
-                  initial={{ scaleX: 0 }}
-                  whileHover={{ scaleX: 1 }}
-                  transition={{ duration: 0.3 }}
-                />
-                <span className="relative z-10" style={{ mixBlendMode: "difference" }}>
-                  Sí 💗
-                </span>
+                Sí, quiero ❤
               </motion.button>
 
-              {/* NO — jumps away */}
+              {/* Botón No animado por Framer (Seguro y fluido) */}
               <motion.button
-                animate={{ x: noPos.x, y: noPos.y, opacity: noOpacity }}
-                transition={{ type: "spring", stiffness: 300, damping: 22 }}
-                onClick={handleNo}
-                className="font-light"
-                style={{
-                  fontSize: noSize,
-                  color: "var(--ink-faint)",
-                  background: "transparent",
-                  border: "none",
-                  cursor: noCount >= NO_TEXTS.length - 1 ? "default" : "pointer",
-                  letterSpacing: "0.12em",
-                  whiteSpace: "nowrap",
-                }}
+                onMouseEnter={dodgeHover}
+                onClick={dodgeHover}
+                animate={{ x: noPosition.x, y: noPosition.y }}
+                transition={{ type: "spring", stiffness: 200, damping: 10 }}
+                className="absolute z-10 px-12 py-4 border border-white/20 text-white/50 font-serif-display text-2xl rounded-full bg-black/50 backdrop-blur-sm"
               >
-                {noLabel}
+                No
               </motion.button>
-            </motion.div>
-
-            {/* hint after first no */}
-            <AnimatePresence>
-              {noCount > 0 && (
-                <motion.p
-                  key="hint"
-                  className="text-[0.6rem] tracking-[0.2em] uppercase"
-                  style={{ color: "var(--ink-faint)" }}
-                  initial={{ opacity: 0, y: 6 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.5 }}
-                >
-                  {noCount < 4
-                    ? "El no se escapa solo..."
-                    : "Ya sé que vas a decir que sí 🌹"}
-                </motion.p>
-              )}
-            </AnimatePresence>
+            </div>
           </motion.div>
         ) : (
-          /* ── ACCEPTED ── */
-          <motion.div
-            key="accepted"
-            className="flex flex-col items-center gap-8 relative z-10"
-            initial={{ opacity: 0, scale: 0.85, filter: "blur(10px)" }}
-            animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
-            transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
-          >
-            <motion.p
-              className="font-serif-display font-light italic leading-[1.5]"
-              style={{
-                fontSize: "clamp(1.8rem, 6vw, 3rem)",
-                color: "var(--rose-bright)",
-                maxWidth: 500,
-              }}
+          <motion.div key="accepted" className="z-20 text-center" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 1 }}>
+            {/* Resplandor blanco épico */}
+            <motion.div className="fixed inset-0 bg-white pointer-events-none z-[-1]" initial={{ opacity: 1 }} animate={{ opacity: 0 }} transition={{ duration: 1.5 }} />
+
+            <h2 className="font-serif-display italic text-5xl md:text-7xl text-rose-300 drop-shadow-[0_0_30px_rgba(255,180,180,0.5)] mb-6">
+              ¡Te amo, Casly!
+            </h2>
+            <p className="text-sm md:text-base tracking-[0.4em] uppercase text-white/80 mb-12">
+              El inicio de nuestra historia.
+            </p>
+
+            <motion.button
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 2 }}
+              onClick={onRestart}
+              className="border border-white/20 px-8 py-3 rounded-full text-xs tracking-widest uppercase hover:bg-white/10 transition-colors text-white/50 hover:text-white"
             >
-              Sabía que dirías que sí.
-            </motion.p>
-            <motion.p
-              className="font-light tracking-[0.06em]"
-              style={{
-                fontSize: "clamp(0.85rem, 2vw, 1rem)",
-                color: "var(--ink-dim)",
-                maxWidth: 360,
-                lineHeight: 1.8,
-              }}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.8, duration: 1 }}
-            >
-              Eres la razón de todo esto.<br />Te quiero muchísimo, Casly. 🌹
-            </motion.p>
+              ⟲ Volver a ver
+            </motion.button>
           </motion.div>
         )}
       </AnimatePresence>

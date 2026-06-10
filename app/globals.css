@@ -1,5 +1,9 @@
 @import "tailwindcss";
 
+@keyframes shimmer {
+  100% { transform: translateX(100%); }
+}
+
 :root {
   --rose: #c9a0a0;
   --rose-bright: #e8b4b4;

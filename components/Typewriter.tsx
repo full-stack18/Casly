@@ -1,19 +1,18 @@
 "use client";
-import { motion, Variants } from "framer-motion"; // <-- Importamos Variants
+import { motion, Variants } from "framer-motion";
 
 export default function Typewriter({ text, delay = 0 }: { text: string; delay?: number }) {
-  const letters = Array.from(text);
+  // Separamos por palabras para que no se rompan a la mitad
+  const words = text.split(" ");
 
-  // Le indicamos a TypeScript que esto es de tipo Variants
   const container: Variants = {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
-      transition: { staggerChildren: 0.04, delayChildren: delay },
+      transition: { staggerChildren: 0.03, delayChildren: delay },
     },
   };
 
-  // También le indicamos el tipo aquí
   const child: Variants = {
     visible: {
       opacity: 1,
@@ -26,16 +25,20 @@ export default function Typewriter({ text, delay = 0 }: { text: string; delay?: 
 
   return (
     <motion.span
-      className="inline-flex flex-wrap"
+      className="inline-flex flex-wrap gap-x-[0.25em]"
       variants={container}
       initial="hidden"
       whileInView="visible"
       viewport={{ once: true }}
     >
-      {letters.map((letter, index) => (
-        <motion.span key={index} variants={child}>
-          {letter === " " ? "\u00A0" : letter}
-        </motion.span>
+      {words.map((word, wordIndex) => (
+        <span key={wordIndex} className="inline-flex overflow-hidden">
+          {Array.from(word).map((letter, letterIndex) => (
+            <motion.span key={letterIndex} variants={child}>
+              {letter}
+            </motion.span>
+          ))}
+        </span>
       ))}
     </motion.span>
   );
