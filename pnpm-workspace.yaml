@@ -1,5 +1,8 @@
 allowBuilds:
+  '@tsparticles/engine': set this to true or false
+  react-tsparticles: set this to true or false
   sharp: set this to true or false
+  tsparticles-engine: set this to true or false
 minimumReleaseAgeExclude:
   - '@next/env@16.2.9'
   - '@next/swc-darwin-arm64@16.2.9'
