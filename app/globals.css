@@ -1,7 +1,5 @@
 @import "tailwindcss";
 
-@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&display=swap');
-
 :root {
   --rose: #c9a0a0;
   --rose-bright: #e8b4b4;
@@ -25,5 +23,5 @@ body {
 }
 
 .font-serif-display {
-  font-family: 'Cormorant Garamond', serif;
+  font-family: var(--font-cormorant), serif;
 }
