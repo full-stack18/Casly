@@ -65,31 +65,38 @@ export default function Act3({ onNext }: { onNext: () => void }) {
         </motion.div>
       ))}
 
-      {/* Tap hint */}
-      <AnimatePresence>
-        {!isOpen && (
-          <motion.p
-            initial={{ opacity: 0 }} animate={{ opacity: [0.4, 1, 0.4] }} exit={{ opacity: 0 }}
-            transition={{ repeat: Infinity, duration: 2 }}
-            className="absolute top-[8%] text-xs tracking-[0.3em] uppercase text-white/60 z-10"
-          >
-            Toca el sobre
-          </motion.p>
-        )}
-      </AnimatePresence>
-
-      {/* Counter — only when envelope closed */}
+      {/* Top section — hint + counter, aligned */}
       <AnimatePresence>
         {!isOpen && (
           <motion.div
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             transition={{ duration: 0.6 }}
-            className="absolute top-[16%] w-full flex justify-center z-10 px-4"
+            className="absolute top-[7%] w-full flex flex-col items-center gap-5 z-10 px-4"
           >
+            <motion.p
+              animate={{ opacity: [0.45, 1, 0.45] }}
+              transition={{ repeat: Infinity, duration: 2 }}
+              className="text-xs tracking-[0.3em] uppercase text-white/60 text-center"
+            >
+              Toca el sobre
+            </motion.p>
             <LoveCounterSentence />
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Corner love accents */}
+      {["♡", "❤", "♡"].map((h, i) => (
+        <motion.span
+          key={`corner-${i}`}
+          className="absolute text-rose-400/25 pointer-events-none select-none text-lg"
+          style={{ left: i === 0 ? "6%" : i === 1 ? "88%" : "10%", top: i === 2 ? "78%" : "22%" }}
+          animate={{ y: [0, -10, 0], opacity: [0.2, 0.45, 0.2] }}
+          transition={{ duration: 3.5, repeat: Infinity, delay: i * 0.8 }}
+        >
+          {h}
+        </motion.span>
+      ))}
 
       {/* ── ENVELOPE + LETTER ─────────────────────────────────────────── */}
       {/* Strategy: The envelope stays fixed in the lower half of the screen.
@@ -115,9 +122,6 @@ export default function Act3({ onNext }: { onNext: () => void }) {
                 maxHeight: "78vh",
               }}
             >
-              {/* Tape strip */}
-              <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-24 md:w-32 h-7 bg-white/60 backdrop-blur-md shadow-sm rotate-1 z-20 border border-white/80" />
-
               {/* Scrollable content */}
               <div className="overflow-y-auto flex-1 p-6 md:p-10" style={{ scrollbarWidth: "none" }}>
                 <h2 className="font-serif-display italic text-xl md:text-3xl text-rose-900 mb-5 border-b border-rose-200/50 pb-4 w-full text-center">
@@ -132,11 +136,18 @@ export default function Act3({ onNext }: { onNext: () => void }) {
                   />
                 </div>
 
+                <motion.p
+                  initial={{ opacity: 0 }} animate={{ opacity: 0.5 }} transition={{ delay: 12 }}
+                  className="mt-6 text-center font-serif-display italic text-rose-600/60 text-sm"
+                >
+                  con todo mi corazón
+                </motion.p>
+
                 <motion.div
                   initial={{ opacity: 0, scale: 0.8 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: 14 }}
-                  className="mt-8 text-center font-serif-display italic text-rose-800 text-2xl md:text-3xl font-bold"
+                  className="mt-4 text-center font-serif-display italic text-rose-800 text-2xl md:text-3xl font-bold"
                 >
                   Te amo ❤
                 </motion.div>
@@ -173,9 +184,13 @@ export default function Act3({ onNext }: { onNext: () => void }) {
 
         {/* Wax seal */}
         {!isOpen && (
-          <div className="absolute z-30 left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-14 h-14 md:w-20 md:h-20 bg-rose-900 rounded-full shadow-xl flex items-center justify-center border-[3px] border-rose-950">
+          <motion.div
+            animate={{ scale: [1, 1.06, 1] }}
+            transition={{ repeat: Infinity, duration: 2.5, ease: "easeInOut" }}
+            className="absolute z-30 left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-14 h-14 md:w-20 md:h-20 bg-rose-900 rounded-full shadow-xl flex items-center justify-center border-[3px] border-rose-950"
+          >
             <span className="text-rose-200 text-2xl md:text-4xl font-serif-display italic">C</span>
-          </div>
+          </motion.div>
         )}
 
         {/* Envelope flap */}

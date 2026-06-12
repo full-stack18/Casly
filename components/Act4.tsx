@@ -40,21 +40,36 @@ export default function Act4({ onNext }: { onNext: () => void }) {
         </motion.span>
       ))}
 
+      {/* Floating love phrases */}
+      {["mi amor", "hermosa", "te adoro"].map((phrase, i) => (
+        <motion.span
+          key={phrase}
+          className="absolute pointer-events-none font-serif-display italic text-rose-300/20 text-xs md:text-sm z-[1]"
+          style={{ left: `${5 + i * 42}%`, top: `${55 + (i % 2) * 18}%` }}
+          animate={{ y: [0, -14, 0], opacity: [0.12, 0.35, 0.12] }}
+          transition={{ duration: 4 + i, repeat: Infinity, delay: i * 1.2 }}
+        >
+          {phrase}
+        </motion.span>
+      ))}
+
       {/* Title — stays well above cards */}
-      <div className="absolute top-[6%] text-center z-20 w-full px-4 pointer-events-none">
+      <div className="absolute top-[5%] flex flex-col items-center gap-2 z-20 w-full px-4 pointer-events-none">
         <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-          className="text-xs tracking-[0.35em] uppercase text-white/45 mb-2">
+          className="text-xs tracking-[0.35em] uppercase text-white/45 text-center">
           Mi niña hermosa
         </motion.p>
         <motion.h2 initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
-          className="font-serif-display italic text-2xl md:text-4xl text-rose-200 drop-shadow-[0_0_15px_rgba(255,160,160,0.3)]">
+          className="font-serif-display italic text-2xl md:text-4xl text-rose-200 drop-shadow-[0_0_15px_rgba(255,160,160,0.3)] text-center">
           Desliza para ver la perfección
         </motion.h2>
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 0.55 }} transition={{ delay: 0.8 }}
-          className="mt-2 text-rose-400/70 text-xs tracking-[0.9em]">
-          ♡ ♡ ♡
-        </motion.div>
+        <motion.p
+          initial={{ opacity: 0 }} animate={{ opacity: 0.6 }} transition={{ delay: 0.8 }}
+          className="font-serif-display italic text-rose-300/50 text-sm text-center"
+        >
+          cada foto, un recuerdo que atesoro
+        </motion.p>
       </div>
 
       {/* Polaroid stack */}

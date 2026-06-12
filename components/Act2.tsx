@@ -144,26 +144,25 @@ export default function Act2({ onNext }: { onNext: () => void }) {
       <canvas ref={canvasRef} className="absolute inset-0 z-0" />
 
       {/* Text content */}
-      <div className="absolute top-[15%] w-full text-center z-10 pointer-events-none">
+      <div className="absolute top-[12%] w-full flex flex-col items-center gap-4 z-10 pointer-events-none px-6">
         <motion.p
           initial={{ opacity: 0, letterSpacing: "0.1em" }}
           animate={{ opacity: 1, letterSpacing: "0.5em" }}
           transition={{ duration: 3, ease: "easeOut" }}
-          className="text-sm md:text-lg uppercase text-white/90 drop-shadow-[0_0_15px_rgba(255,255,255,0.8)] font-light">
+          className="text-sm md:text-lg uppercase text-white/90 drop-shadow-[0_0_15px_rgba(255,255,255,0.8)] font-light text-center">
           Pide un deseo...
         </motion.p>
 
-        {/* Romantic subtitle */}
         <motion.p
           initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 3.5, duration: 2 }}
-          className="mt-3 font-serif-display italic text-rose-300/70 text-sm md:text-base tracking-wide">
+          className="font-serif-display italic text-rose-300/75 text-sm md:text-base tracking-wide text-center max-w-xs md:max-w-md">
           yo ya pedí el mío: tenerte siempre
         </motion.p>
 
         <motion.p
-          initial={{ opacity: 0 }} animate={{ opacity: 0.45 }} transition={{ delay: 5.5, duration: 2 }}
-          className="mt-3 text-[10px] tracking-[0.3em] uppercase text-rose-300/55 font-light">
-          sigue una estrella fugaz con tu mirada
+          initial={{ opacity: 0 }} animate={{ opacity: 0.5 }} transition={{ delay: 5, duration: 2 }}
+          className="text-[10px] tracking-[0.35em] uppercase text-rose-200/40 font-light text-center">
+          nuestro universo · contigo
         </motion.p>
       </div>
 
@@ -181,10 +180,17 @@ export default function Act2({ onNext }: { onNext: () => void }) {
         </motion.span>
       ))}
 
+      <motion.p
+        initial={{ opacity: 0 }} animate={{ opacity: 0.4 }} transition={{ delay: 6, duration: 2 }}
+        className="absolute bottom-[22%] w-full text-center font-serif-display italic text-rose-200/40 text-xs md:text-sm pointer-events-none z-10 px-6"
+      >
+        cada estrella brilla por ti
+      </motion.p>
+
       <AnimatePresence>
         {showButton && (
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-            className="absolute bottom-16 w-full flex justify-center z-20">
+            className="absolute bottom-16 w-full flex flex-col items-center gap-3 z-20">
             <button onClick={onNext}
               className="bg-white/10 backdrop-blur-md border border-white/30 text-white px-10 py-3 tracking-[0.2em] text-sm uppercase hover:bg-white hover:text-black transition-all rounded-full shadow-[0_0_20px_rgba(255,255,255,0.2)]">
               Continuar

@@ -21,7 +21,7 @@ export default function Home() {
 
   const toggleMusic = () => {
     if (!audioRef.current) {
-      audioRef.current = new Audio("/wonderwall.mp3"); // Asegúrate de tener este archivo en tu carpeta 'public'
+      audioRef.current = new Audio("/Hoobastank - The Reason (Sub. Español  Lyrics).mp3"); // Asegúrate de tener este archivo en tu carpeta 'public'
       audioRef.current.loop = true;
       audioRef.current.volume = 0;
     }

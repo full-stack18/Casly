@@ -2,6 +2,8 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
+const LOVE_WORDS = ["te amo", "mua", "i love u", "te adoro", "corazón", "mi amor", "besos", "para ti", "❤"];
+
 export default function Act5({ onRestart }: { onRestart: () => void }) {
   const [accepted, setAccepted] = useState(false);
   const [noPosition, setNoPosition] = useState({ x: 120, y: 80 });
@@ -16,42 +18,40 @@ export default function Act5({ onRestart }: { onRestart: () => void }) {
     resize();
     window.addEventListener("resize", resize);
 
-    // ── Floating hearts (background, slow) ──────────────────────────────
     type FloatHeart = { x: number; y: number; size: number; speed: number; swing: number; swingSpeed: number; angle: number };
-    type BurstParticle = { x: number; y: number; vx: number; vy: number; alpha: number; size: number; decay: number };
+    type WordParticle = { x: number; y: number; vx: number; vy: number; alpha: number; size: number; decay: number; text: string };
 
     const floaters: FloatHeart[] = Array.from({ length: 80 }, () => ({
       x: Math.random() * canvas.width,
       y: canvas.height + Math.random() * 600,
       size: Math.random() * 15 + 10,
-      speed: Math.random() * 1.6 + 0.8,   // slower
+      speed: Math.random() * 1.6 + 0.8,
       swing: Math.random() * 2.5,
       swingSpeed: Math.random() * 0.025,
       angle: Math.random() * Math.PI * 2,
     }));
 
-    // Burst particles pool
-    const bursts: BurstParticle[] = [];
+    const words: WordParticle[] = [];
 
-    const spawnBurst = (mx: number, my: number) => {
-      const count = 18;
+    const spawnWords = (mx: number, my: number) => {
+      const count = 3;
       for (let i = 0; i < count; i++) {
-        const angle = (i / count) * Math.PI * 2 + Math.random() * 0.4;
-        const speed = 2 + Math.random() * 5;
-        bursts.push({
-          x: mx, y: my,
-          vx: Math.cos(angle) * speed,
-          vy: Math.sin(angle) * speed,
+        words.push({
+          x: mx + (Math.random() - 0.5) * 40,
+          y: my + (Math.random() - 0.5) * 20,
+          vx: (Math.random() - 0.5) * 0.8,
+          vy: -(Math.random() * 0.6 + 0.25),
           alpha: 1,
-          size: 10 + Math.random() * 14,
-          decay: 0.022 + Math.random() * 0.015,
+          size: 16 + Math.random() * 10,
+          decay: 0.0025 + Math.random() * 0.0015,
+          text: LOVE_WORDS[Math.floor(Math.random() * LOVE_WORDS.length)],
         });
       }
     };
 
-    const handleClick = (e: MouseEvent) => spawnBurst(e.clientX, e.clientY);
+    const handleClick = (e: MouseEvent) => spawnWords(e.clientX, e.clientY);
     const handleTouch = (e: TouchEvent) => {
-      Array.from(e.touches).forEach(t => spawnBurst(t.clientX, t.clientY));
+      Array.from(e.touches).forEach(t => spawnWords(t.clientX, t.clientY));
     };
     canvas.addEventListener("click", handleClick);
     canvas.addEventListener("touchstart", handleTouch);
@@ -60,7 +60,6 @@ export default function Act5({ onRestart }: { onRestart: () => void }) {
     function render() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      // Draw floating background hearts
       ctx.fillStyle = "#E11D48";
       floaters.forEach(p => {
         p.y -= p.speed;
@@ -75,25 +74,22 @@ export default function Act5({ onRestart }: { onRestart: () => void }) {
         ctx.restore();
       });
 
-      // Draw burst particles — all on same canvas, no DOM overhead
-      for (let i = bursts.length - 1; i >= 0; i--) {
-        const b = bursts[i];
-        b.x += b.vx;
-        b.y += b.vy;
-        b.vy += 0.12; // gentle gravity
-        b.vx *= 0.97;
-        b.alpha -= b.decay;
-        if (b.alpha <= 0) { bursts.splice(i, 1); continue; }
+      for (let i = words.length - 1; i >= 0; i--) {
+        const w = words[i];
+        w.x += w.vx;
+        w.y += w.vy;
+        w.vy *= 0.998;
+        w.vx *= 0.995;
+        w.alpha -= w.decay;
+        if (w.alpha <= 0) { words.splice(i, 1); continue; }
 
         ctx.save();
-        ctx.globalAlpha = b.alpha;
-        // Warm pink-to-rose gradient per particle for richness
-        ctx.fillStyle = b.alpha > 0.6 ? "#ff6b9d" : "#E11D48";
-        ctx.shadowBlur = 10 * b.alpha;
-        ctx.shadowColor = "rgba(255, 100, 150, 0.8)";
-        ctx.translate(b.x, b.y);
-        ctx.font = `${b.size}px Arial`;
-        ctx.fillText("❤", 0, 0);
+        ctx.globalAlpha = w.alpha;
+        ctx.fillStyle = w.alpha > 0.5 ? "#ffb4c8" : "#e879a0";
+        ctx.font = `italic ${w.size}px Georgia, serif`;
+        ctx.shadowBlur = 8 * w.alpha;
+        ctx.shadowColor = "rgba(255, 150, 180, 0.6)";
+        ctx.fillText(w.text, w.x, w.y);
         ctx.restore();
       }
 
@@ -120,7 +116,6 @@ export default function Act5({ onRestart }: { onRestart: () => void }) {
   return (
     <section className="w-full h-full flex flex-col items-center justify-center relative overflow-hidden bg-[#050508] px-4">
 
-      {/* Subtle ambient pulse when accepted */}
       {accepted && (
         <motion.div
           className="absolute inset-0 pointer-events-none"
@@ -130,7 +125,6 @@ export default function Act5({ onRestart }: { onRestart: () => void }) {
         />
       )}
 
-      {/* Canvas — pointer-events only when accepted so buttons work before */}
       <canvas
         ref={canvasRef}
         className="absolute inset-0 z-0"
@@ -150,17 +144,19 @@ export default function Act5({ onRestart }: { onRestart: () => void }) {
           <motion.div key="question" className="z-10 flex flex-col items-center w-full"
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0, scale: 1.2, filter: "blur(10px)" }}>
 
-            {/* Subtle floating hearts decoration */}
-            {[...Array(5)].map((_, i) => (
-              <motion.span key={i}
-                className="absolute text-rose-500/20 pointer-events-none select-none"
-                style={{ left: `${12 + i * 18}%`, top: `${15 + (i % 3) * 20}%`, fontSize: `${14 + i * 4}px` }}
-                animate={{ y: [0, -18, 0], opacity: [0.15, 0.35, 0.15] }}
-                transition={{ duration: 3 + i * 0.7, repeat: Infinity, delay: i * 0.5 }}
-              >❤</motion.span>
+            {["contigo", "siempre"].map((w, i) => (
+              <motion.span
+                key={w}
+                className="absolute font-serif-display italic text-rose-400/20 text-sm pointer-events-none"
+                style={{ left: i === 0 ? "10%" : "78%", top: `${20 + i * 55}%` }}
+                animate={{ opacity: [0.15, 0.4, 0.15] }}
+                transition={{ duration: 3, repeat: Infinity, delay: i }}
+              >
+                {w}
+              </motion.span>
             ))}
 
-            <h1 className="font-serif-display italic text-3xl md:text-5xl lg:text-6xl mb-16 md:mb-24 text-center leading-tight drop-shadow-2xl">
+            <h1 className="font-serif-display italic text-3xl md:text-5xl lg:text-6xl mb-16 md:mb-24 text-center leading-tight drop-shadow-2xl px-4">
               Asly Melanie Rodriguez Reyes...<br />
               <span className="text-rose-300">¿Quieres ser mi novia?</span>
             </h1>
@@ -191,19 +187,23 @@ export default function Act5({ onRestart }: { onRestart: () => void }) {
             <motion.div className="fixed inset-0 bg-white pointer-events-none z-[-1]"
               initial={{ opacity: 1 }} animate={{ opacity: 0 }} transition={{ duration: 1.5, ease: "easeOut" }} />
 
-            <motion.div initial={{ y: 30, opacity: 0 }} animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.8, type: "spring" }} className="flex flex-col items-center">
-              <h2 className="font-serif-display italic text-5xl md:text-8xl text-rose-300 mb-4 drop-shadow-[0_0_30px_rgba(255,180,180,0.5)]">
+            <motion.div
+              initial={{ y: 30, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.8, type: "spring" }}
+              className="flex flex-col items-center gap-3"
+            >
+              <h2 className="font-serif-display italic text-5xl md:text-8xl text-rose-300 drop-shadow-[0_0_30px_rgba(255,180,180,0.5)]">
                 ¡Te amo, Asly!
               </h2>
-              <p className="text-[10px] md:text-sm tracking-[0.4em] uppercase text-white/80 font-light mb-4">
+              <p className="text-[10px] md:text-sm tracking-[0.4em] uppercase text-white/80 font-light">
                 El inicio de nuestra historia
               </p>
               <motion.p
-                initial={{ opacity: 0 }} animate={{ opacity: 0.6 }} transition={{ delay: 2 }}
-                className="font-serif-display italic text-rose-300/80 text-sm mb-10"
+                initial={{ opacity: 0 }} animate={{ opacity: 0.65 }} transition={{ delay: 2 }}
+                className="font-serif-display italic text-rose-300/80 text-sm md:text-base mt-2 mb-8"
               >
-                toca donde quieras ❤
+                toca donde quieras — deja salir mis palabras
               </motion.p>
 
               <motion.button
