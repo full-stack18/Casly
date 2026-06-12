@@ -12,88 +12,181 @@ export default function Act2({ onNext }: { onNext: () => void }) {
     const ctx = canvas.getContext("2d")!;
     let animId: number;
     let stars: any[] = [];
+    let meteors: any[] = [];
     let mouse = { x: -9999, y: -9999 };
+
+    function spawnMeteor() {
+      meteors.push({
+        x: Math.random() * canvas.width * 1.4,
+        y: -20,
+        speed: Math.random() * 8 + 6,
+        angle: Math.PI / 5,
+        trail: [] as { x: number; y: number }[],
+        size: Math.random() * 1.5 + 0.5,
+        done: false,
+      });
+    }
 
     function init() {
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
       stars = Array.from({ length: 800 }, () => ({
-        ox: Math.random() * canvas.width, 
-        oy: Math.random() * canvas.height,
-        x: Math.random() * canvas.width, 
-        y: Math.random() * canvas.height,
-        r: Math.random() * 1.5 + 0.2, 
-        alpha: Math.random(), 
+        ox: Math.random() * canvas.width, oy: Math.random() * canvas.height,
+        x: Math.random() * canvas.width, y: Math.random() * canvas.height,
+        r: Math.random() * 1.5 + 0.2, alpha: Math.random(),
         velocity: Math.random() * 0.03 + 0.01,
-        // Agregamos una probabilidad de que la estrella sea muy brillante
-        isBright: Math.random() > 0.95
+        isBright: Math.random() > 0.95,
       }));
+      meteors = [];
     }
+
+    const meteorInterval = setInterval(spawnMeteor, 1800);
+    spawnMeteor();
 
     function draw() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+      // Stars
       stars.forEach(s => {
         s.alpha += s.velocity;
         if (s.alpha <= 0.1 || s.alpha >= 1) s.velocity *= -1;
-        
-        const dx = mouse.x - s.x; const dy = mouse.y - s.y;
+
+        const dx = mouse.x - s.x, dy = mouse.y - s.y;
         const dist = Math.hypot(dx, dy);
-        
-        // Interacción mágica con el cursor
-        if (dist < 150) {
-          const force = (150 - dist) / 150;
-          ctx.beginPath();
-          // Halo de luz alrededor de la estrella al pasar el cursor
-          ctx.arc(s.x, s.y, s.r + (force * 5), 0, Math.PI * 2);
-          ctx.fillStyle = `rgba(255, 200, 220, ${force})`;
-          ctx.fill();
+
+        if (dist < 120) {
+          const force = (120 - dist) / 120;
+          // Warm rose bloom
+          const grad = ctx.createRadialGradient(s.x, s.y, 0, s.x, s.y, s.r + force * 10);
+          grad.addColorStop(0, `rgba(255,190,210,${force * 0.95})`);
+          grad.addColorStop(0.5, `rgba(255,140,170,${force * 0.45})`);
+          grad.addColorStop(1, "transparent");
+          ctx.beginPath(); ctx.arc(s.x, s.y, s.r + force * 10, 0, Math.PI * 2);
+          ctx.fillStyle = grad; ctx.fill();
+          // Sparkle cross
+          if (force > 0.45) {
+            ctx.save();
+            ctx.strokeStyle = `rgba(255,220,230,${(force - 0.45) * 1.8})`;
+            ctx.lineWidth = 0.6;
+            const arm = s.r + force * 7;
+            ctx.beginPath(); ctx.moveTo(s.x - arm, s.y); ctx.lineTo(s.x + arm, s.y); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(s.x, s.y - arm); ctx.lineTo(s.x, s.y + arm); ctx.stroke();
+            ctx.restore();
+          }
         } else {
-          s.x += (s.ox - s.x) * 0.05; 
+          s.x += (s.ox - s.x) * 0.05;
           s.y += (s.oy - s.y) * 0.05;
         }
 
-        // Dibujar estrella base con destellos aleatorios intensos
-        ctx.beginPath(); 
-        ctx.arc(s.x, s.y, s.isBright ? s.r * 1.5 : s.r, 0, Math.PI * 2);
-        
-        // Parpadeo intenso: si es una estrella "brillante" y su alpha está alto, resplandece
+        ctx.beginPath(); ctx.arc(s.x, s.y, s.isBright ? s.r * 1.5 : s.r, 0, Math.PI * 2);
         if (s.isBright && s.alpha > 0.8) {
-          ctx.fillStyle = `rgba(255, 255, 255, 1)`;
-          ctx.shadowBlur = 10;
-          ctx.shadowColor = "rgba(255, 255, 255, 0.8)";
+          ctx.fillStyle = "rgba(255,255,255,1)"; ctx.shadowBlur = 10; ctx.shadowColor = "rgba(255,255,255,0.8)";
         } else {
-          ctx.fillStyle = `rgba(255, 255, 255, ${Math.abs(s.alpha)})`;
-          ctx.shadowBlur = 0;
+          ctx.fillStyle = `rgba(255,255,255,${Math.abs(s.alpha)})`; ctx.shadowBlur = 0;
         }
-        
         ctx.fill();
+      });
+
+      ctx.shadowBlur = 0;
+
+      // Meteors
+      meteors = meteors.filter(m => !m.done);
+      meteors.forEach(m => {
+        m.x += Math.cos(m.angle) * m.speed;
+        m.y += Math.sin(m.angle) * m.speed;
+        m.trail.push({ x: m.x, y: m.y });
+        if (m.trail.length > 32) m.trail.shift();
+        if (m.x > canvas.width + 100 || m.y > canvas.height + 100) { m.done = true; return; }
+
+        for (let i = 1; i < m.trail.length; i++) {
+          const t = i / m.trail.length;
+          ctx.beginPath();
+          ctx.moveTo(m.trail[i - 1].x, m.trail[i - 1].y);
+          ctx.lineTo(m.trail[i].x, m.trail[i].y);
+          ctx.strokeStyle = `rgba(255,235,255,${t * 0.92})`;
+          ctx.lineWidth = m.size * t;
+          ctx.shadowBlur = 9 * t;
+          ctx.shadowColor = "rgba(255,200,255,0.85)";
+          ctx.stroke();
+        }
+        ctx.beginPath(); ctx.arc(m.x, m.y, m.size + 1.2, 0, Math.PI * 2);
+        ctx.fillStyle = "rgba(255,255,255,0.97)";
+        ctx.shadowBlur = 18; ctx.shadowColor = "rgba(255,220,255,1)";
+        ctx.fill(); ctx.shadowBlur = 0;
       });
 
       animId = requestAnimationFrame(draw);
     }
 
-    const handleMove = (e: any) => { mouse.x = e.touches ? e.touches[0].clientX : e.clientX; mouse.y = e.touches ? e.touches[0].clientY : e.clientY; };
-    window.addEventListener("mousemove", handleMove); window.addEventListener("touchmove", handleMove); window.addEventListener("resize", init);
+    const handleMove = (e: any) => {
+      mouse.x = e.touches ? e.touches[0].clientX : e.clientX;
+      mouse.y = e.touches ? e.touches[0].clientY : e.clientY;
+    };
+    window.addEventListener("mousemove", handleMove);
+    window.addEventListener("touchmove", handleMove);
+    window.addEventListener("resize", init);
     init(); draw();
-    return () => { cancelAnimationFrame(animId); window.removeEventListener("resize", init); window.removeEventListener("mousemove", handleMove); window.removeEventListener("touchmove", handleMove); clearTimeout(timer); };
+
+    return () => {
+      cancelAnimationFrame(animId);
+      clearInterval(meteorInterval);
+      window.removeEventListener("resize", init);
+      window.removeEventListener("mousemove", handleMove);
+      window.removeEventListener("touchmove", handleMove);
+      clearTimeout(timer);
+    };
   }, []);
 
   return (
-    <section className="relative w-full h-full overflow-hidden cursor-crosshair bg-black" style={{ backgroundImage: "url('/universo.jpg')", backgroundSize: "cover", backgroundPosition: "center" }}>
+    <section className="relative w-full h-full overflow-hidden cursor-crosshair bg-black"
+      style={{ backgroundImage: "url('/universo.jpg')", backgroundSize: "cover", backgroundPosition: "center" }}>
       <div className="absolute inset-0 bg-black/40 mix-blend-multiply" />
       <canvas ref={canvasRef} className="absolute inset-0 z-0" />
-      
+
+      {/* Text content */}
       <div className="absolute top-[15%] w-full text-center z-10 pointer-events-none">
-        <motion.p initial={{ opacity: 0, letterSpacing: "0.1em" }} animate={{ opacity: 1, letterSpacing: "0.5em" }} transition={{ duration: 3, ease: "easeOut" }} className="text-sm md:text-lg uppercase text-white/90 drop-shadow-[0_0_15px_rgba(255,255,255,0.8)] font-light">
+        <motion.p
+          initial={{ opacity: 0, letterSpacing: "0.1em" }}
+          animate={{ opacity: 1, letterSpacing: "0.5em" }}
+          transition={{ duration: 3, ease: "easeOut" }}
+          className="text-sm md:text-lg uppercase text-white/90 drop-shadow-[0_0_15px_rgba(255,255,255,0.8)] font-light">
           Pide un deseo...
+        </motion.p>
+
+        {/* Romantic subtitle */}
+        <motion.p
+          initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 3.5, duration: 2 }}
+          className="mt-3 font-serif-display italic text-rose-300/70 text-sm md:text-base tracking-wide">
+          yo ya pedí el mío: tenerte siempre
+        </motion.p>
+
+        <motion.p
+          initial={{ opacity: 0 }} animate={{ opacity: 0.45 }} transition={{ delay: 5.5, duration: 2 }}
+          className="mt-3 text-[10px] tracking-[0.3em] uppercase text-rose-300/55 font-light">
+          sigue una estrella fugaz con tu mirada
         </motion.p>
       </div>
 
+      {/* Subtle floating hearts in corners */}
+      {[
+        { x: "8%", y: "70%" }, { x: "88%", y: "60%" }, { x: "15%", y: "85%" }, { x: "80%", y: "80%" }
+      ].map((pos, i) => (
+        <motion.span key={i}
+          className="absolute text-rose-400/35 pointer-events-none select-none"
+          style={{ left: pos.x, top: pos.y, fontSize: `${12 + i * 3}px` }}
+          animate={{ y: [0, -14, 0], opacity: [0.2, 0.5, 0.2] }}
+          transition={{ duration: 3 + i * 0.8, repeat: Infinity, delay: i * 1.1 }}
+        >
+          {i % 2 === 0 ? "❤" : "♡"}
+        </motion.span>
+      ))}
+
       <AnimatePresence>
         {showButton && (
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="absolute bottom-16 w-full flex justify-center z-20">
-            <button onClick={onNext} className="bg-white/10 backdrop-blur-md border border-white/30 text-white px-10 py-3 tracking-[0.2em] text-sm uppercase hover:bg-white hover:text-black transition-all rounded-full shadow-[0_0_20px_rgba(255,255,255,0.2)]">
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+            className="absolute bottom-16 w-full flex justify-center z-20">
+            <button onClick={onNext}
+              className="bg-white/10 backdrop-blur-md border border-white/30 text-white px-10 py-3 tracking-[0.2em] text-sm uppercase hover:bg-white hover:text-black transition-all rounded-full shadow-[0_0_20px_rgba(255,255,255,0.2)]">
               Continuar
             </button>
           </motion.div>
