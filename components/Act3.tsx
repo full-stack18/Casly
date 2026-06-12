@@ -7,7 +7,7 @@ function LoveCounterSentence() {
   const [time, setTime] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
 
   useEffect(() => {
-    const start = new Date("2022-05-14T00:00:00").getTime();
+    const start = new Date("2026-04-25T23:30:00").getTime();
     const update = () => {
       const diff = Date.now() - start;
       setTime({
