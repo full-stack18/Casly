@@ -1,45 +1,33 @@
 "use client";
-import { motion, Variants } from "framer-motion";
+import { useState, useEffect } from "react";
+import { motion } from "framer-motion";
 
-export default function Typewriter({ text, delay = 0 }: { text: string; delay?: number }) {
-  // Separamos por palabras para que no se rompan a la mitad
-  const words = text.split(" ");
+export default function Typewriter({ text, delay = 0, speed = 40 }: { text: string; delay?: number; speed?: number }) {
+  const [displayedText, setDisplayedText] = useState("");
+  const [started, setStarted] = useState(false);
 
-  const container: Variants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: { staggerChildren: 0.03, delayChildren: delay },
-    },
-  };
+  useEffect(() => {
+    const timeout = setTimeout(() => setStarted(true), delay * 1000);
+    return () => clearTimeout(timeout);
+  }, [delay]);
 
-  const child: Variants = {
-    visible: {
-      opacity: 1,
-      y: 0,
-      filter: "blur(0px)",
-      transition: { type: "spring", damping: 12, stiffness: 200 },
-    },
-    hidden: { opacity: 0, y: 10, filter: "blur(4px)" },
-  };
+  useEffect(() => {
+    if (!started) return;
+    let i = 0;
+    const interval = setInterval(() => {
+      setDisplayedText(text.slice(0, i + 1));
+      i++;
+      if (i >= text.length) clearInterval(interval);
+    }, speed);
+    return () => clearInterval(interval);
+  }, [text, started, speed]);
 
   return (
-    <motion.span
-      className="inline-flex flex-wrap gap-x-[0.25em]"
-      variants={container}
-      initial="hidden"
-      whileInView="visible"
-      viewport={{ once: true }}
-    >
-      {words.map((word, wordIndex) => (
-        <span key={wordIndex} className="inline-flex overflow-hidden">
-          {Array.from(word).map((letter, letterIndex) => (
-            <motion.span key={letterIndex} variants={child}>
-              {letter}
-            </motion.span>
-          ))}
-        </span>
-      ))}
-    </motion.span>
+    <span>
+      {displayedText}
+      <motion.span animate={{ opacity: [0, 1, 0] }} transition={{ repeat: Infinity, duration: 0.8 }} className="font-light text-rose-400">
+        |
+      </motion.span>
+    </span>
   );
 }
